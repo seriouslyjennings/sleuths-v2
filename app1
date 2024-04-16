@@ -1,0 +1,36 @@
+import requests
+import xml.etree.ElementTree as ET
+from urllib.parse import quote
+
+# Constants
+API_KEY = "306ad0acbe0704749aecaa19bebeebd2ef0a"
+BASE_API_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+
+def search_pubmed(query):
+    """
+    Search PubMed for a specific query and return the list of IDs.
+    """
+    search_url = f"{BASE_API_URL}esearch.fcgi?db=pubmed&term={quote(query)}&retmax=5&api_key={API_KEY}&retmode=xml"
+    response = requests.get(search_url)
+    if response.status_code == 200:
+        root = ET.fromstring(response.text)
+        id_list = root.findall('.//Id')
+        return [id_.text for id_ in id_list] if id_list else []
+    return []
+
+def fetch_details_by_id(pubmed_id):
+    """
+    Fetch the full details of a publication given its PubMed ID.
+    """
+    fetch_url = f"{BASE_API_URL}efetch.fcgi?db=pubmed&retmode=xml&id={pubmed_id}&api_key={API_KEY}"
+    response = requests.get(fetch_url)
+    if response.status_code == 200:
+        return response.text
+    return None
+
+# Example usage (comment out in production)
+# search_result = search_pubmed("COVID-19 vaccines")
+# detailed_info = fetch_details_by_id(search_result[0] if search_result else None)
+
+# These examples are commented out to avoid accidental execution during development.
+# Uncomment and use as needed for real scenarios or testing.
